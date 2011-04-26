@@ -1,0 +1,7 @@
+name: Jobs
+main: me.alex.jobs.Jobs
+version: 1.2.0
+commands:
+    Jobs:
+        description: Jobs
+        usage: /jobs
