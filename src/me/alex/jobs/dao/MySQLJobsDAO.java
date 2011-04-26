@@ -94,6 +94,7 @@ public class MySQLJobsDAO implements JobsDAO {
 		Job job = findPlayer(player);
 		connect();
 		if(job!=null){
+			job.stripTitle();
 			// existing job
 			String sql = "UPDATE `jobs` SET `experience` = 0, `level` = 1, `job` = ? WHERE `username` = ?;";
 			try {

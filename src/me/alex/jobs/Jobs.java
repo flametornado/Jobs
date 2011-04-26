@@ -259,11 +259,13 @@ public class Jobs extends JavaPlugin{
 						if(permissions != null){
 							// if they are allowed to join, add them to it.
 							if(permissions.has(player, "jobs.job." + jobName)){
+								System.out.println("0. " + player.getDisplayName());
 								if(players.containsKey(player)){
-									removePlayer((Player)sender);
+									removePlayer(player);
 								}
-								dao.changeJob((Player)sender, jobName);
-								addPlayer((Player)sender);
+								dao.changeJob(player, jobName);
+								System.out.println("5. " + player.getDisplayName());
+								addPlayer(player);
 								player.sendMessage("You are now a " + jobName);
 								return true;
 							}
@@ -274,10 +276,10 @@ public class Jobs extends JavaPlugin{
 						}
 						else {
 							if(players.containsKey(player)){
-								removePlayer((Player)sender);
+								removePlayer(player);
 							}
-							dao.changeJob((Player)sender, jobName);
-							addPlayer((Player)sender);
+							dao.changeJob(player, jobName);
+							addPlayer(player);
 							player.sendMessage("You are now a " + jobName);
 							return true;
 						}
@@ -328,6 +330,7 @@ public class Jobs extends JavaPlugin{
 
 	public void removePlayer(Player player){
 		if(players.containsKey(player)){
+			players.get(player).stripTitle();
 			dao.saveJob(player, players.get(player));
 			players.remove(player);
 		}
@@ -445,12 +448,12 @@ public class Jobs extends JavaPlugin{
 		Title correctTitle = null;
 		for(Title title: titles.values()){
 			if(correctTitle == null){
-				if(title.getLevelReq() < level){
+				if(title.getLevelReq() <= level){
 					correctTitle = title;
 				}
 			}
 			else {
-				if(title.getLevelReq() < level && 
+				if(title.getLevelReq() <= level && 
 						correctTitle.getLevelReq() < title.getLevelReq()){
 					correctTitle = title;
 				}

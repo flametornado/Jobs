@@ -43,7 +43,7 @@ public class Job {
 		this.baseXp = plugin.getBaseXp();
 		this.xpMultiplyer = plugin.getXpMultiplier();
 		this.maxExp = (int)(baseXp * Math.pow(1+increaseExpPerLevel, level-1));
-		setDisplayName(false);
+		setDisplayName(false, getTitle() + player.getDisplayName());
 		updateStats();
 	}
 	
@@ -55,9 +55,27 @@ public class Job {
 		return level;
 	}
 	
-	private void setDisplayName(boolean broadcast){
+	public void stripTitle(){
 		if(plugin.getDisplayLevel() != 0){
-			String displayName = "";
+			String title = getTitle();
+			String displayName = player.getDisplayName();
+			String currDisplayName = displayName.replaceFirst(title, "");
+			player.setDisplayName(currDisplayName);
+		}
+	}
+	
+	private void setDisplayName(boolean broadcast, String displayName){
+		if(plugin.getDisplayLevel() != 0){
+			if(broadcast && plugin.isBroadcasting()){
+				plugin.getServer().broadcastMessage(player.getName() + " is now a " + displayName);
+			}
+			player.setDisplayName(displayName);
+		}
+	}
+	
+	private String getTitle(){
+		String displayName = "";
+		if(plugin.getDisplayLevel() != 0){
 			if(plugin.getDisplayLevel() == 1 || plugin.getDisplayLevel() == 3){
 				Title title = plugin.getTitle(level);
 				if(title != null){
@@ -67,11 +85,8 @@ public class Job {
 			if(plugin.getDisplayLevel() == 2 || plugin.getDisplayLevel() == 3){
 				displayName += plugin.getChatColour(job) + job + " " + ChatColor.WHITE;
 			}
-			if(broadcast && plugin.isBroadcasting()){
-				plugin.getServer().broadcastMessage(player.getName() + " is now a " + displayName);
-			}
-			player.setDisplayName(displayName + player.getName());
 		}
+		return displayName;
 	}
 	
 	public double getPlaceIncome(Block block){
@@ -103,6 +118,7 @@ public class Job {
 	public void increaseExperience(int exp){
 		experience += exp;
 		if(experience >= maxExp){
+			String oldTitle = getTitle();
 			while(experience >= maxExp){
 				++level;
 				experience -= maxExp;
@@ -113,7 +129,8 @@ public class Job {
 			if(level % 30 == 0 || level % 60 == 0 || level % 90 == 0){
 				broadcast = true;
 			}
-			setDisplayName(broadcast);
+			String strippedTitle = player.getDisplayName().replaceFirst(oldTitle, "");
+			setDisplayName(broadcast, getTitle() + strippedTitle);
 			updateStats();
 		}
 	}
