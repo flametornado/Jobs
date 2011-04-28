@@ -38,6 +38,7 @@ public class Jobs extends JavaPlugin{
 	
 	private final JobsPlayerListener playerListener = new JobsPlayerListener(this);
 	private final JobsBlockListener blockListener =  new JobsBlockListener(this);
+	private final JobsEntityListener entityListener = new JobsEntityListener(this);
 	private final HashMap<Player, Job> players = new HashMap<Player, Job>();
 	private JobsDAO dao = null;
 	
@@ -46,6 +47,8 @@ public class Jobs extends JavaPlugin{
 		new HashMap<String, HashMap<Material, Double>>();
 	private HashMap<String, HashMap<Material, Double>> jobConfigurationsPlace = 
 		new HashMap<String, HashMap<Material, Double>>();
+	private HashMap<String, HashMap<String, Double>> jobConfigurationsKill = 
+		new HashMap<String, HashMap<String, Double>>();
 	private HashMap<String, ChatColor> jobColours =  new HashMap<String, ChatColor>();
 	private HashMap<String, Double> levelingProgressionRate =
 		new HashMap<String, Double>();
@@ -139,6 +142,7 @@ public class Jobs extends JavaPlugin{
 			for(String jobType: jobMap.keySet()){
 				HashMap<Material, Double> MapBreak = new HashMap<Material, Double>();
 				HashMap<Material, Double> MapPlace = new HashMap<Material, Double>();
+				HashMap<String, Double> MapKill = new HashMap<String, Double>();
 				
 				// chat colour
 				jobColours.put(jobType, ChatColor.valueOf((String)((Map<String, Object>)jobMap.get(jobType)).get("ChatColour")));
@@ -168,11 +172,22 @@ public class Jobs extends JavaPlugin{
 					}
 				}
 				
+				// kills
+				if((boolean)((Map<String, Object>)jobMap.get(jobType)).containsKey("Kill")){
+					Map<String, Double> killMap = (Map<String, Double>)((Map<String, Object>)jobMap.get(jobType)).get("Kill");
+					if(killMap != null){
+						for(String name: killMap.keySet()){
+							MapKill.put(name, killMap.get(name));
+						}
+					}
+				}
+				
 				jobConfigurationsBreak.put(jobType, MapBreak);
 				jobConfigurationsPlace.put(jobType, MapPlace);
+				jobConfigurationsKill.put(jobType, MapKill);
 			}
 			
-			// load up possible jobs
+			// load up possible titles
 			Map<String, Object> titlesMap = (Map<String, Object>)map.get("Titles");
 					
 			// for each title detected
@@ -195,10 +210,11 @@ public class Jobs extends JavaPlugin{
 			pluginListener = new PluginListener(this);
 			server = getServer();
 			pm.registerEvent(Event.Type.PLUGIN_ENABLE, pluginListener, Event.Priority.Monitor, this);
-			pm.registerEvent(Event.Type.PLAYER_JOIN, playerListener, Event.Priority.Normal, this);
-			pm.registerEvent(Event.Type.PLAYER_QUIT, playerListener, Event.Priority.Normal, this);
+			pm.registerEvent(Event.Type.PLAYER_JOIN, playerListener, Event.Priority.Monitor, this);
+			pm.registerEvent(Event.Type.PLAYER_QUIT, playerListener, Event.Priority.Monitor, this);
 			pm.registerEvent(Event.Type.BLOCK_BREAK, blockListener, Event.Priority.Monitor, this);
 			pm.registerEvent(Event.Type.BLOCK_PLACE, blockListener, Event.Priority.Monitor, this);
+			pm.registerEvent(Event.Type.ENTITY_DAMAGE, entityListener, Event.Priority.Monitor, this);
 			
 			for(Player online: getServer().getOnlinePlayers()){
 				addPlayer(online);
@@ -413,6 +429,10 @@ public class Jobs extends JavaPlugin{
 	
 	public HashMap<Material, Double> getPlaceList(String job){
 		return jobConfigurationsPlace.get(job);
+	}
+	
+	public HashMap<String, Double> getKillList(String job){
+		return jobConfigurationsKill.get(job);
 	}
 	
 	public void saveAll(){

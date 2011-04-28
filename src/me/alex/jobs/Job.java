@@ -24,11 +24,12 @@ public class Job {
 	private double increaseExpPerLevel = 0.1;
 	private HashMap<Material, Double> jobBreakPayout = null;
 	private HashMap<Material, Double> jobPlacePayout = null;
+	private HashMap<String, Double> jobKillPayout = null;
 	private double flatRate = 1;
 	
 	@SuppressWarnings("unused")
 	private Job(){}
-	
+
 	public Job(String job, int experience, int level, Jobs plugin, Player player){
 		this.plugin = plugin;
 		this.increaseExpPerLevel = plugin.getLevelingRate(job);
@@ -39,6 +40,7 @@ public class Job {
 		this.player = player;
 		this.jobBreakPayout = plugin.getBreakList(job);
 		this.jobPlacePayout = plugin.getPlaceList(job);
+		this.jobKillPayout = plugin.getKillList(job);
 		this.flatRate = plugin.getFlateRatePayout();
 		this.baseXp = plugin.getBaseXp();
 		this.xpMultiplyer = plugin.getXpMultiplier();
@@ -89,10 +91,20 @@ public class Job {
 		return displayName;
 	}
 	
+	public double getKillIncome(String type){
+		double income = flatRate;
+		if(jobKillPayout.containsKey(type)){
+			income = getIncome(jobKillPayout.get(type));
+			increaseExperience((int)(income*xpMultiplyer));
+		}
+		updateMoneyStats();
+		return income;
+	}
+	
 	public double getPlaceIncome(Block block){
 		double income = flatRate;
 		if(jobPlacePayout.containsKey(block.getType())){
-			income = getIncome(block.getType(), jobPlacePayout);
+			income = getIncome(jobPlacePayout.get(block.getType()));
 			increaseExperience((int)(income*xpMultiplyer));
 		}
 		updateMoneyStats();
@@ -102,15 +114,14 @@ public class Job {
 	public double getBreakIncome(Block block){
 		double income = flatRate;
 		if(jobBreakPayout.containsKey(block.getType())){
-			income = getIncome(block.getType(), jobBreakPayout);
+			income = getIncome(jobBreakPayout.get(block.getType()));
 			increaseExperience((int)(income*xpMultiplyer));
 		}
 		updateMoneyStats();
 		return income;
 	}
 	
-	private double getIncome(Material block, HashMap<Material, Double> map){
-		double income = map.get(block);
+	private double getIncome(double income){
 		income = ((int)((income*Math.pow((1+increasePerLevel), level-1))*100))/100.00;
 		return income;
 	}
@@ -150,7 +161,7 @@ public class Job {
 			for(Entry<Material, Double> entry: jobBreakPayout.entrySet()){
 				String item = entry.getKey().name().toLowerCase();
 				item = item.replace('_', ' ');
-				player.sendMessage("    " + item + " : " + getIncome(entry.getKey(), jobBreakPayout));
+				player.sendMessage("    " + item + " : " + getIncome(jobBreakPayout.get(entry.getKey())));
 			}
 		}
 		if(!jobPlacePayout.isEmpty()){
@@ -158,7 +169,14 @@ public class Job {
 			for(Entry<Material, Double> entry: jobPlacePayout.entrySet()){
 				String item = entry.getKey().name().toLowerCase();
 				item = item.replace('_', ' ');
-				player.sendMessage("    " + item + " : " + getIncome(entry.getKey(), jobPlacePayout));
+				player.sendMessage("    " + item + " : " + getIncome(jobPlacePayout.get(entry.getKey())));
+			}
+		}
+		if(!jobKillPayout.isEmpty()){
+			player.sendMessage("  Kill:");
+			for(Entry<String, Double> entry: jobKillPayout.entrySet()){
+				String item = entry.getKey();
+				player.sendMessage("    " + item + " : " + getIncome(jobKillPayout.get(entry.getKey())));
 			}
 		}
 	}
