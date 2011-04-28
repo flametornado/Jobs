@@ -16,31 +16,35 @@ public class JobsBlockListener extends BlockListener{
 	}
 	
 	public void onBlockBreak(BlockBreakEvent event){
-		Block block = event.getBlock();
-		Player player = event.getPlayer();
-		if(plugin.getJob(player) != null){
-			double income = plugin.getJob(player).getBreakIncome(block);
-			if(plugin.getiConomy() != null){
-				Account account = iConomy.getBank().getAccount(player.getName());
-				account.add(income);
-			}
-			else if(plugin.getBOSEconomy() != null){
-				plugin.getBOSEconomy().addPlayerMoney(player.getName(), (int)income, false);
+		if(!event.isCancelled()){
+			Block block = event.getBlock();
+			Player player = event.getPlayer();
+			if(plugin.getJob(player) != null){
+				double income = plugin.getJob(player).getBreakIncome(block);
+				if(plugin.getiConomy() != null){
+					Account account = iConomy.getBank().getAccount(player.getName());
+					account.add(income);
+				}
+				else if(plugin.getBOSEconomy() != null){
+					plugin.getBOSEconomy().addPlayerMoney(player.getName(), (int)income, false);
+				}
 			}
 		}
 	}
 	
 	public void onBlockPlace(BlockPlaceEvent event){
-		Block block = event.getBlock();
-		Player player = event.getPlayer();
-		if(plugin.getJob(player) != null){
-			double income = plugin.getJob(player).getPlaceIncome(block);
-			if(plugin.getiConomy() != null){
-				Account account = iConomy.getBank().getAccount(player.getName());
-				account.add(income);
-			}
-			else if(plugin.getBOSEconomy() != null){
-				plugin.getBOSEconomy().addPlayerMoney(player.getName(), (int)income, false);
+		if(event.canBuild() && !event.isCancelled()){
+			Block block = event.getBlock();
+			Player player = event.getPlayer();
+			if(plugin.getJob(player) != null){
+				double income = plugin.getJob(player).getPlaceIncome(block);
+				if(plugin.getiConomy() != null){
+					Account account = iConomy.getBank().getAccount(player.getName());
+					account.add(income);
+				}
+				else if(plugin.getBOSEconomy() != null){
+					plugin.getBOSEconomy().addPlayerMoney(player.getName(), (int)income, false);
+				}
 			}
 		}
 	}

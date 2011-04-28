@@ -63,13 +63,13 @@ public class Jobs extends JavaPlugin{
 	
 	// for iConomy
 	private PluginListener pluginListener = null;
-    private iConomy iConomy = null;
     private Server server = null;
     
     private Stats stats = null;
     
     private BOSEconomy boseconomy = null;
-    
+    private iConomy iConomy = null;
+
     private PermissionHandler permissions = null;
     
     private int baseXp = 100;
@@ -80,138 +80,145 @@ public class Jobs extends JavaPlugin{
 	
 	@SuppressWarnings("unchecked")
 	public void onEnable(){
-		
-		Yaml yaml = new Yaml();
-		Object obj = null;
-		try {
-			obj = yaml.load(new FileInputStream("plugins/Jobs/configuration.yml"));
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		Map<String, Object> map = (Map<String, Object>)obj;
-		
-		if(debugEnabled){
+		try{
+			Yaml yaml = new Yaml();
+			Object obj = null;
 			try {
-				jobsLog = new PrintWriter(new FileOutputStream(debugLog, true));
+				obj = yaml.load(new FileInputStream("plugins/Jobs/configuration.yml"));
 			} catch (FileNotFoundException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-		}
-		
-		if(((String)map.get("storage-method")).equals("MySQL")){
-			dao = new MySQLJobsDAO(this, 
-					(String)map.get("mysql-database"), 
-					(String)map.get("mysql-url"), 
-					(String)map.get("mysql-username"), 
-					(String)map.get("mysql-password"));
-		}
-		else if (((String)map.get("storage-method")).equals("sqlite")){
-			dao = new SqliteJobsDAO(this, (String)map.get("sqlite-database"));
-		}
-		else if(((String)map.get("storage-method")).equals("flatfile")){
-			dao = new FlatFileJobsDAO("plugins/Jobs/jobs.data", this);
-		}
-		
-		if (((String)map.get("chat-display")).equals("full")){
-			displayLevel = 3;
-		}
-		else if(((String)map.get("chat-display")).equals("job")){
-			displayLevel = 2;
-		}
-		else if (((String)map.get("chat-display")).equals("skill")){
-			displayLevel = 1;
-		}
-		else if(((String)map.get("chat-display")).equals("none")){
-			displayLevel = 0;
-		}
-		
-		broadcast = (Boolean)map.get("broadcast-skill-up");
-		flatRate = (Double)map.get("flat-rate-payout");
-		baseXp = (Integer)map.get("base-exp");
-		xpMultiplyer = (Double)map.get("xp-multiplyer");
-						
-		// load up possible jobs
-		Map<String, Object> jobMap = (Map<String, Object>)map.get("Jobs");
-				
-		// for each job detected
-		for(String jobType: jobMap.keySet()){
-			HashMap<Material, Double> MapBreak = new HashMap<Material, Double>();
-			HashMap<Material, Double> MapPlace = new HashMap<Material, Double>();
+			Map<String, Object> map = (Map<String, Object>)obj;
 			
-			// chat colour
-			jobColours.put(jobType, ChatColor.valueOf((String)((Map<String, Object>)jobMap.get(jobType)).get("ChatColour")));
-			// leveling progression rate
-			levelingProgressionRate.put(jobType, (Double)((Map<String, Object>)jobMap.get(jobType)).get("levelingProgressionRate"));
-			// income progression rate
-			incomeProgressionRate.put(jobType, (Double)((Map<String, Object>)jobMap.get(jobType)).get("incomeProgressionRate"));
-
-			
-			// break blocks
-			if((boolean)((Map<String, Object>)jobMap.get(jobType)).containsKey("Break")){
-				Map<String, Double> breakMap = (Map<String, Double>)((Map<String, Object>)jobMap.get(jobType)).get("Break");
-				if(breakMap != null){
-					for(String name: breakMap.keySet()){
-						MapBreak.put(Material.getMaterial(name), breakMap.get(name));
-					}
+			if(debugEnabled){
+				try {
+					jobsLog = new PrintWriter(new FileOutputStream(debugLog, true));
+				} catch (FileNotFoundException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
 				}
 			}
 			
-			// place blocks
-			if((boolean)((Map<String, Object>)jobMap.get(jobType)).containsKey("Place")){
-				Map<String, Double> placeMap = (Map<String, Double>)((Map<String, Object>)jobMap.get(jobType)).get("Place");
-				if(placeMap != null){
-					for(String name: placeMap.keySet()){
-						MapPlace.put(Material.getMaterial(name), placeMap.get(name));
-					}
-				}
+			if(((String)map.get("storage-method")).equals("MySQL")){
+				dao = new MySQLJobsDAO(this, 
+						(String)map.get("mysql-database"), 
+						(String)map.get("mysql-url"), 
+						(String)map.get("mysql-username"), 
+						(String)map.get("mysql-password"));
+			}
+			else if (((String)map.get("storage-method")).equals("sqlite")){
+				dao = new SqliteJobsDAO(this, (String)map.get("sqlite-database"));
+			}
+			else if(((String)map.get("storage-method")).equals("flatfile")){
+				dao = new FlatFileJobsDAO("plugins/Jobs/jobs.data", this);
 			}
 			
-			jobConfigurationsBreak.put(jobType, MapBreak);
-			jobConfigurationsPlace.put(jobType, MapPlace);
-		}
-		
-		// load up possible jobs
-		Map<String, Object> titlesMap = (Map<String, Object>)map.get("Titles");
+			if (((String)map.get("chat-display")).equals("full")){
+				displayLevel = 3;
+			}
+			else if(((String)map.get("chat-display")).equals("job")){
+				displayLevel = 2;
+			}
+			else if (((String)map.get("chat-display")).equals("skill")){
+				displayLevel = 1;
+			}
+			else if(((String)map.get("chat-display")).equals("none")){
+				displayLevel = 0;
+			}
+			
+			broadcast = (Boolean)map.get("broadcast-skill-up");
+			flatRate = (Double)map.get("flat-rate-payout");
+			baseXp = (Integer)map.get("base-exp");
+			xpMultiplyer = (Double)map.get("xp-multiplyer");
+							
+			// load up possible jobs
+			Map<String, Object> jobMap = (Map<String, Object>)map.get("Jobs");
+					
+			// for each job detected
+			for(String jobType: jobMap.keySet()){
+				HashMap<Material, Double> MapBreak = new HashMap<Material, Double>();
+				HashMap<Material, Double> MapPlace = new HashMap<Material, Double>();
 				
-		// for each title detected
-		for(String title: titlesMap.keySet()){
-			Map<String, Object> titleInfoMap = (Map<String, Object>)titlesMap.get(title);
-			titles.put((Integer)titleInfoMap.get("levelReq"), 
-					new Title(title, 
-							ChatColor.valueOf((String)titleInfoMap.get("ChatColour")),
-							(Integer)titleInfoMap.get("levelReq")));
+				// chat colour
+				jobColours.put(jobType, ChatColor.valueOf((String)((Map<String, Object>)jobMap.get(jobType)).get("ChatColour")));
+				// leveling progression rate
+				levelingProgressionRate.put(jobType, (Double)((Map<String, Object>)jobMap.get(jobType)).get("levelingProgressionRate"));
+				// income progression rate
+				incomeProgressionRate.put(jobType, (Double)((Map<String, Object>)jobMap.get(jobType)).get("incomeProgressionRate"));
+	
+				
+				// break blocks
+				if((boolean)((Map<String, Object>)jobMap.get(jobType)).containsKey("Break")){
+					Map<String, Double> breakMap = (Map<String, Double>)((Map<String, Object>)jobMap.get(jobType)).get("Break");
+					if(breakMap != null){
+						for(String name: breakMap.keySet()){
+							MapBreak.put(Material.getMaterial(name), breakMap.get(name));
+						}
+					}
+				}
+				
+				// place blocks
+				if((boolean)((Map<String, Object>)jobMap.get(jobType)).containsKey("Place")){
+					Map<String, Double> placeMap = (Map<String, Double>)((Map<String, Object>)jobMap.get(jobType)).get("Place");
+					if(placeMap != null){
+						for(String name: placeMap.keySet()){
+							MapPlace.put(Material.getMaterial(name), placeMap.get(name));
+						}
+					}
+				}
+				
+				jobConfigurationsBreak.put(jobType, MapBreak);
+				jobConfigurationsPlace.put(jobType, MapPlace);
+			}
+			
+			// load up possible jobs
+			Map<String, Object> titlesMap = (Map<String, Object>)map.get("Titles");
+					
+			// for each title detected
+			for(String title: titlesMap.keySet()){
+				Map<String, Object> titleInfoMap = (Map<String, Object>)titlesMap.get(title);
+				titles.put((Integer)titleInfoMap.get("levelReq"), 
+						new Title(title, 
+								ChatColor.valueOf((String)titleInfoMap.get("ChatColour")),
+								(Integer)titleInfoMap.get("levelReq")));
+			}
+			
+			if((Integer)map.get("save-period")>0){
+				saveTimer = new Timer();
+				saveTimer.scheduleAtFixedRate(new SaveScheduler(this), 
+						60000*(Integer)map.get("save-period"), 
+						60000*(Integer)map.get("save-period"));
+			}
+			
+			PluginManager pm = getServer().getPluginManager();
+			pluginListener = new PluginListener(this);
+			server = getServer();
+			pm.registerEvent(Event.Type.PLUGIN_ENABLE, pluginListener, Event.Priority.Monitor, this);
+			pm.registerEvent(Event.Type.PLAYER_JOIN, playerListener, Event.Priority.Normal, this);
+			pm.registerEvent(Event.Type.PLAYER_QUIT, playerListener, Event.Priority.Normal, this);
+			pm.registerEvent(Event.Type.BLOCK_BREAK, blockListener, Event.Priority.Monitor, this);
+			pm.registerEvent(Event.Type.BLOCK_PLACE, blockListener, Event.Priority.Monitor, this);
+			
+			for(Player online: getServer().getOnlinePlayers()){
+				addPlayer(online);
+			}
+			
+			log.info("Jobs started");		
 		}
-		
-		if((Integer)map.get("save-period")>0){
-			saveTimer = new Timer();
-			saveTimer.scheduleAtFixedRate(new SaveScheduler(this), 
-					60000*(Integer)map.get("save-period"), 
-					60000*(Integer)map.get("save-period"));
+		catch (Exception e){
+			e.printStackTrace();
+			log.info("Jobs not started, there's an error with the configuration");
 		}
-		
-		PluginManager pm = getServer().getPluginManager();
-		pluginListener = new PluginListener(this);
-		server = getServer();
-		pm.registerEvent(Event.Type.PLUGIN_ENABLE, pluginListener, Event.Priority.Monitor, this);
-		pm.registerEvent(Event.Type.PLAYER_JOIN, playerListener, Event.Priority.Normal, this);
-		pm.registerEvent(Event.Type.PLAYER_QUIT, playerListener, Event.Priority.Normal, this);
-		pm.registerEvent(Event.Type.BLOCK_BREAK, blockListener, Event.Priority.Normal, this);
-		pm.registerEvent(Event.Type.BLOCK_PLACE, blockListener, Event.Priority.Normal, this);
-		
-		for(Player online: getServer().getOnlinePlayers()){
-			addPlayer(online);
-		}
-		
-		log.info("Jobs started");		
 	}
 	
 	public void onDisable(){
 		log.info("Jobs stopped");
 		for(Player player: players.keySet()){
 			dao.saveJob(player, players.get(player));
+			players.get(player).stripTitle();
 		}
+		players.clear();
 		if(jobsLog != null){
 			jobsLog.close();
 		}
