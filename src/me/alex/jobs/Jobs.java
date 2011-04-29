@@ -47,8 +47,8 @@ public class Jobs extends JavaPlugin{
 		new HashMap<String, HashMap<Material, Double>>();
 	private HashMap<String, HashMap<Material, Double>> jobConfigurationsPlace = 
 		new HashMap<String, HashMap<Material, Double>>();
-	private HashMap<String, HashMap<String, Double>> jobConfigurationsKill = 
-		new HashMap<String, HashMap<String, Double>>();
+	private HashMap<String, HashMap<Class, Double>> jobConfigurationsKill = 
+		new HashMap<String, HashMap<Class, Double>>();
 	private HashMap<String, ChatColor> jobColours =  new HashMap<String, ChatColor>();
 	private HashMap<String, Double> levelingProgressionRate =
 		new HashMap<String, Double>();
@@ -142,7 +142,7 @@ public class Jobs extends JavaPlugin{
 			for(String jobType: jobMap.keySet()){
 				HashMap<Material, Double> MapBreak = new HashMap<Material, Double>();
 				HashMap<Material, Double> MapPlace = new HashMap<Material, Double>();
-				HashMap<String, Double> MapKill = new HashMap<String, Double>();
+				HashMap<Class, Double> MapKill = new HashMap<Class, Double>();
 				
 				// chat colour
 				jobColours.put(jobType, ChatColor.valueOf((String)((Map<String, Object>)jobMap.get(jobType)).get("ChatColour")));
@@ -177,10 +177,11 @@ public class Jobs extends JavaPlugin{
 					Map<String, Double> killMap = (Map<String, Double>)((Map<String, Object>)jobMap.get(jobType)).get("Kill");
 					if(killMap != null){
 						for(String name: killMap.keySet()){
-							MapKill.put(name, killMap.get(name));
+							MapKill.put(Class.forName("org.bukkit.craftbukkit.entity.Craft"+name), killMap.get(name));
 						}
 					}
 				}
+				
 				
 				jobConfigurationsBreak.put(jobType, MapBreak);
 				jobConfigurationsPlace.put(jobType, MapPlace);
@@ -214,7 +215,7 @@ public class Jobs extends JavaPlugin{
 			pm.registerEvent(Event.Type.PLAYER_QUIT, playerListener, Event.Priority.Monitor, this);
 			pm.registerEvent(Event.Type.BLOCK_BREAK, blockListener, Event.Priority.Monitor, this);
 			pm.registerEvent(Event.Type.BLOCK_PLACE, blockListener, Event.Priority.Monitor, this);
-			pm.registerEvent(Event.Type.ENTITY_DAMAGE, entityListener, Event.Priority.Monitor, this);
+			pm.registerEvent(Event.Type.ENTITY_DAMAGE, entityListener, Event.Priority.Highest, this);
 			
 			for(Player online: getServer().getOnlinePlayers()){
 				addPlayer(online);
@@ -282,12 +283,10 @@ public class Jobs extends JavaPlugin{
 						if(permissions != null){
 							// if they are allowed to join, add them to it.
 							if(permissions.has(player, "jobs.job." + jobName)){
-								System.out.println("0. " + player.getDisplayName());
 								if(players.containsKey(player)){
 									removePlayer(player);
 								}
 								dao.changeJob(player, jobName);
-								System.out.println("5. " + player.getDisplayName());
 								addPlayer(player);
 								player.sendMessage("You are now a " + jobName);
 								return true;
@@ -327,6 +326,13 @@ public class Jobs extends JavaPlugin{
 								String item = entry.getKey().name().toLowerCase();
 								item = item.replace('_', ' ');
 								player.sendMessage("    " + item + " : " + entry.getValue());
+							}
+						}
+						if(!jobConfigurationsKill.get(args[1]).isEmpty()){
+							player.sendMessage("  Kill:");
+							for(Entry<Class, Double> entry: jobConfigurationsKill.get(args[1]).entrySet()){
+								Class item = entry.getKey();
+								player.sendMessage("    " + item.getSimpleName().replace("Craft", "") + " : " + entry.getValue());
 							}
 						}
 						return true;
@@ -431,7 +437,7 @@ public class Jobs extends JavaPlugin{
 		return jobConfigurationsPlace.get(job);
 	}
 	
-	public HashMap<String, Double> getKillList(String job){
+	public HashMap<Class, Double> getKillList(String job){
 		return jobConfigurationsKill.get(job);
 	}
 	

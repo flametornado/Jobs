@@ -24,7 +24,7 @@ public class Job {
 	private double increaseExpPerLevel = 0.1;
 	private HashMap<Material, Double> jobBreakPayout = null;
 	private HashMap<Material, Double> jobPlacePayout = null;
-	private HashMap<String, Double> jobKillPayout = null;
+	private HashMap<Class, Double> jobKillPayout = null;
 	private double flatRate = 1;
 	
 	@SuppressWarnings("unused")
@@ -91,7 +91,7 @@ public class Job {
 		return displayName;
 	}
 	
-	public double getKillIncome(String type){
+	public double getKillIncome(Class type){
 		double income = flatRate;
 		if(jobKillPayout.containsKey(type)){
 			income = getIncome(jobKillPayout.get(type));
@@ -174,9 +174,9 @@ public class Job {
 		}
 		if(!jobKillPayout.isEmpty()){
 			player.sendMessage("  Kill:");
-			for(Entry<String, Double> entry: jobKillPayout.entrySet()){
-				String item = entry.getKey();
-				player.sendMessage("    " + item + " : " + getIncome(jobKillPayout.get(entry.getKey())));
+			for(Entry<Class, Double> entry: jobKillPayout.entrySet()){
+				Class item = entry.getKey();
+				player.sendMessage("    " + item.getSimpleName().replace("Craft", "") + " : " + getIncome(jobKillPayout.get(entry.getKey())));
 			}
 		}
 	}
