@@ -17,7 +17,7 @@ public class Job {
 	private int baseXp = 100;
 	private double xpMultiplyer = 1.0; 
 	private String job = null;
-	private int experience = 0;
+	private double experience = 0;
 	private Jobs plugin = null;
 	private Player player = null;
 	private double increasePerLevel = 0.05;
@@ -50,7 +50,7 @@ public class Job {
 	}
 	
 	public int getExperience(){
-		return experience;
+		return (int)experience;
 	}
 	
 	public int getLevel(){
@@ -105,7 +105,7 @@ public class Job {
 		double income = flatRate;
 		if(jobPlacePayout.containsKey(block.getType())){
 			income = getIncome(jobPlacePayout.get(block.getType()));
-			increaseExperience((int)(income*xpMultiplyer));
+			increaseExperience((income*xpMultiplyer));
 		}
 		updateMoneyStats();
 		return income;
@@ -115,7 +115,7 @@ public class Job {
 		double income = flatRate;
 		if(jobBreakPayout.containsKey(block.getType())){
 			income = getIncome(jobBreakPayout.get(block.getType()));
-			increaseExperience((int)(income*xpMultiplyer));
+			increaseExperience((income*xpMultiplyer));
 		}
 		updateMoneyStats();
 		return income;
@@ -126,8 +126,10 @@ public class Job {
 		return income;
 	}
 	
-	public void increaseExperience(int exp){
+	public void increaseExperience(double exp){
+		exp = ((int)(exp*100))/100.00;
 		experience += exp;
+		
 		if(experience >= maxExp){
 			String oldTitle = getTitle();
 			while(experience >= maxExp){
